@@ -1,0 +1,45 @@
+name: Build and Deploy
+run-name: ${{ github.actor }} is build and deploy to Digitalocean's droplet.
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: React Project Build
+    environment: production
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: NPM Install and Build
+        run: |
+          mkdir build
+          echo Hello > build/index.txt
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-folder
+          path: build/
+          retention-days: 1
+  deploy:
+    name: Deploy to Digitalocean's Droplet
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Download bulid artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: build-folder
+      - name: List Folder
+        run: |
+          pwd
+          ls
+      - name: Copy build folder to droplet
+        run: |
+          echo "Host: ${{ secrets.DEV_HOST }}"
+          echo "User: ${{ secrets.DEV_USERNAME }}"
+          echo "Password: ${{ secrets.DEV_PASSWORD }}"
+          echo "Port: ${{ secrets.DEV_PORT }}"
